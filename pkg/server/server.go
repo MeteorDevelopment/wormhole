@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -26,8 +27,9 @@ func Init() {
 		handleSocketConnection(c, handler)
 	}))
 
-	log.Println("Server listening on port 3000...")
-	log.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	log.Printf("Server listening on port %s...", port)
+	log.Fatal(app.Listen(":" + port))
 }
 
 func handleRegister(c *fiber.Ctx) error {
