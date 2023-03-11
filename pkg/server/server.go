@@ -39,7 +39,7 @@ func handleRegister(c *fiber.Ctx) error {
 	err := auth.Register(username, password)
 	if err != nil {
 		log.Printf("Registration failed: %v", err)
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	log.Printf("User '%s' registered successfully", username)
@@ -53,7 +53,7 @@ func handleLogin(c *fiber.Ctx) error {
 	token, err := auth.Login(username, password)
 	if err != nil {
 		log.Printf("Login failed: %v", err)
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	log.Printf("User '%s' logged in successfully", username)
@@ -70,7 +70,7 @@ func handleSocketUpgrade(c *fiber.Ctx) error {
 	_, err := auth.IsTokenValid(token)
 	if err != nil {
 		log.Printf("Token validation failed: %v", err)
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if !websocket.IsWebSocketUpgrade(c) {

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"github.com/pkg/errors"
 	"log"
@@ -37,14 +38,14 @@ func (h *Handler) HandleConnection(acc *database.Account, conn *websocket.Conn) 
 			if !websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Println(errors.Wrap(err, "error reading message from "+client.account.Username))
 			}
-			return
+			break
 		}
 
 		switch messageType {
 		case websocket.TextMessage:
 			msg, err := DecodeMessage(message, client)
 			if err != nil {
-				log.Println(errors.Wrap(err, "error decoding message from "+client.account.Username))
+				client.SendError(err, fmt.Sprintf("error decoding message from %s", client.account.Username))
 				continue
 			}
 
@@ -55,7 +56,7 @@ func (h *Handler) HandleConnection(acc *database.Account, conn *websocket.Conn) 
 			return
 
 		default:
-			log.Printf("unhandled message type %d from %s", messageType, client.account.Username)
+			client.SendError(err, fmt.Sprintf("unhandled message type %d", messageType))
 			continue
 		}
 	}
@@ -98,4 +99,10 @@ func (h *Handler) Broadcast(message *Message) {
 		}
 	}
 	h.mutex.Unlock()
+}
+
+func (c *Client) SendError(err error, text string) {
+	err = errors.Wrap(err, text)
+	c.conn.WriteJSON(fiber.Map{"error": err.Error()})
+	log.Println(err)
 }

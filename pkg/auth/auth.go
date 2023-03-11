@@ -3,10 +3,10 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/dvsekhvalnov/jose2go"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/exp/slices"
+	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -31,19 +31,19 @@ func Init() {
 
 func Register(username string, password string) error {
 	if err := validateUsername(username); err != nil {
-		fmt.Println("Username validation failed:", err)
+		log.Printf("Username validation failed: %v", err)
 		return err
 	}
 
 	if err := validatePassword(password); err != nil {
-		fmt.Println("Password validation failed:", err)
+		log.Printf("Password validation failed: %v", err)
 		return err
 	}
 
 	_, err := database.GetAccountWithUsername(username)
 	if err == nil {
-		fmt.Println("duplicate username")
-		return errors.New("account with this username already exists")
+		log.Printf("Account with username '%s' already exists", username)
+		return errors.New("account with that username already exists")
 	}
 
 	return database.NewAccount(username, password)
