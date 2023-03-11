@@ -43,7 +43,15 @@ func handleRegister(c *fiber.Ctx) error {
 	}
 
 	log.Printf("User '%s' registered successfully", username)
-	return c.SendStatus(fiber.StatusCreated)
+
+	token, err := auth.Login(username, password)
+	if err != nil {
+		log.Printf("Login failed: %v", err)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	log.Printf("User '%s' logged in successfully", username)
+	return c.Status(fiber.StatusAccepted).JSON(fiber.Map{"token": token})
 }
 
 func handleLogin(c *fiber.Ctx) error {
