@@ -69,7 +69,7 @@ func handleLogin(c *fiber.Ctx) error {
 }
 
 func handleSocketUpgrade(c *fiber.Ctx) error {
-	token := c.Get("Authorization")
+	token := c.Query("token")
 	if token == "" {
 		log.Println("Unauthorized access attempt: Missing token")
 		return fiber.ErrUnauthorized
