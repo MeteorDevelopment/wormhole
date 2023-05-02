@@ -1,65 +1,35 @@
 package database
 
 import (
-	"github.com/google/uuid"
-	"github.com/segmentio/ksuid"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/bsoncodec"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
-	"os"
-	"reflect"
+	"wormhole/pkg/config"
 )
 
-var client *mongo.Client
-var db *mongo.Database
-var accounts *mongo.Collection
+var dbPool *pgxpool.Pool
+
+func Get() *pgxpool.Pool {
+	return dbPool
+}
 
 func Init() {
-	tUUID := reflect.TypeOf(uuid.UUID{})
-
-	registry := bson.NewRegistryBuilder().
-		RegisterTypeEncoder(tUUID, bsoncodec.ValueEncoderFunc(encodeUUID)).
-		RegisterTypeDecoder(tUUID, bsoncodec.ValueDecoderFunc(decodeUUID)).
-		Build()
+	cfg := config.Get()
+	connString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", cfg.DbUsername, cfg.DbPassword, cfg.DbHost, cfg.DbPort, cfg.DbName)
 
 	var err error
-	client, err = mongo.NewClient(options.Client().SetRegistry(registry).ApplyURI(os.Getenv("MONGO_URL")))
+	dbPool, err = pgxpool.New(context.Background(), connString)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to connect to the database: %v", err)
 	}
 
-	err = client.Connect(nil)
+	err = dbPool.Ping(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to ping the database: %v", err)
 	}
-
-	db = client.Database("wormhole", options.Database())
-	accounts = db.Collection("accounts", options.Collection())
 }
 
 func Close() {
-	err := client.Disconnect(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func GetAccount(id ksuid.KSUID) (*Account, error) {
-	var acc Account
-	err := accounts.FindOne(nil, bson.M{"id": id}).Decode(&acc)
-	if err != nil {
-		return nil, err
-	}
-	return &acc, nil
-}
-
-func GetAccountWithUsername(username string) (*Account, error) {
-	var acc Account
-	err := accounts.FindOne(nil, bson.M{"username": username}).Decode(&acc)
-	if err != nil {
-		return nil, err
-	}
-	return &acc, nil
+	dbPool.Close()
 }

@@ -1,0 +1,17 @@
+From: {{.From}}
+To: {{.To}}
+Subject: {{.Subject}}
+MIME-version: 1.0;
+Content-Type: text/html; charset="UTF-8";
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>{{.Subject}}</title>
+    </head>
+    <body>
+        <pre style="font-family: 'Courier New', Courier, monospace;">Hi {{.Name}},<br><br>{{.Content}}<br><br>Thanks,<br>Wormhole</pre>
+    </body>
+</html>
